@@ -22,8 +22,7 @@
   --good-text: #006300;
   --bad: #d03b3b;
   --bad-text: #b02a2a;
-  --over: #2a78d6;
-  --under: #e34948;
+  --dir: #898781; /* pace bar: direction is shown by position, so no hue */
   --neutral: #f0efec;
   --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300;
   --focus: #2a78d6;
@@ -44,8 +43,7 @@
     --good-text: #3cc23c;
     --bad: #e66767;
     --bad-text: #ef8a8a;
-    --over: #3987e5;
-    --under: #e66767;
+    --dir: #898781;
     --neutral: #383835;
     --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300;
     --focus: #6da7ec;
@@ -416,7 +414,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 2
     const s = svg('svg', { width: w, height: h, viewBox: `0 0 ${w} ${h}`, 'aria-hidden': 'true' });
     s.append(svg('rect', { x: 0, y: h / 2 - 1, width: w, height: 2, fill: css('--neutral') }));
     if (len > 0.5) s.append(svg('rect', { x: v >= 0 ? mid : mid - len, y: 1, width: len, height: h - 2, rx: 3,
-      fill: v >= 0 ? css('--over') : css('--under') }));
+      fill: css('--dir') }));
     s.append(svg('line', { x1: mid, x2: mid, y1: 0, y2: h, stroke: css('--ink-2'), 'stroke-width': 1 }));
     return s;
   }
