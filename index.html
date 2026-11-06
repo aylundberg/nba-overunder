@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NBA Over/Under 2026-27</title>
+<meta name="description" content="Live standings for our NBA 2026-27 win-total over/under pool.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23eb6834'/%3E%3Cpath d='M2 16h28M16 2v28M6 6c6 5 6 15 0 20M26 6c-6 5-6 15 0 20' stroke='%230b0b0b' stroke-width='1.6' fill='none'/%3E%3C/svg%3E">
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --surface-2: #f3f2ee;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #6f6e69;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11,11,11,0.10);
+  --good: #0ca30c;
+  --good-text: #006300;
+  --bad: #d03b3b;
+  --bad-text: #b02a2a;
+  --over: #2a78d6;
+  --under: #e34948;
+  --neutral: #f0efec;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300;
+  --focus: #2a78d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-2: #232321;
+    --ink: #f0efec;
+    --ink-2: #c3c2b7;
+    --muted: #9a9890;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255,255,255,0.10);
+    --good: #0ca30c;
+    --good-text: #3cc23c;
+    --bad: #e66767;
+    --bad-text: #ef8a8a;
+    --over: #3987e5;
+    --under: #e66767;
+    --neutral: #383835;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300;
+    --focus: #6da7ec;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--page);
+  color: var(--ink);
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 1120px; margin: 0 auto; padding: 24px 16px 64px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin-bottom: 20px; }
+h1 { font-size: 24px; line-height: 1.2; margin: 0; letter-spacing: -0.01em; }
+h2 { font-size: 17px; margin: 0; }
+.sub { color: var(--ink-2); font-size: 14px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+.card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 12px; }
+.note { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Leaderboard */
+.board { width: 100%; border-collapse: collapse; }
+.board th { text-align: left; font-size: 12px; font-weight: 600; color: var(--muted); padding: 0 8px 8px; white-space: nowrap; }
+.board td { padding: 10px 8px; border-top: 1px solid var(--grid); vertical-align: middle; }
+.board th.r, .board td.r { text-align: right; }
+.rank { width: 32px; color: var(--ink-2); }
+.who { display: flex; align-items: center; gap: 8px; font-weight: 600; white-space: nowrap; }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.big { font-size: 20px; font-weight: 650; }
+.barcell { width: 32%; min-width: 80px; }
+.bar { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.bar > span { display: block; height: 100%; border-radius: 4px; }
+.up { color: var(--good-text); }
+.down { color: var(--bad-text); }
+.flat { color: var(--muted); }
+
+/* Controls */
+.controls { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.controls label { font-size: 13px; color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+select, .seg button {
+  font: inherit; font-size: 14px; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--axis); border-radius: 8px;
+  padding: 6px 10px; min-height: 34px;
+}
+.seg { display: inline-flex; border: 1px solid var(--axis); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; cursor: pointer; background: transparent; }
+.seg button + button { border-left: 1px solid var(--axis); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* Chart */
+.chart { position: relative; width: 100%; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 2px; border-radius: 1px; display: inline-block; }
+.tip {
+  position: absolute; pointer-events: none; z-index: 5;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12); padding: 8px 10px; font-size: 13px; min-width: 150px;
+  opacity: 0; transition: opacity .08s;
+}
+.tip.on { opacity: 1; }
+.tip .t-date { color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+.tip .t-row { display: flex; align-items: center; gap: 8px; }
+.tip .t-row b { min-width: 28px; text-align: right; font-variant-numeric: tabular-nums; }
+.tip .t-row i { width: 12px; height: 2px; border-radius: 1px; display: inline-block; }
+.tip .t-row span { color: var(--ink-2); }
+.empty { border: 1px dashed var(--axis); border-radius: 8px; padding: 24px 16px; text-align: center; color: var(--ink-2); font-size: 14px; }
+
+/* Team table */
+.scroller { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -18px; padding: 0 18px; }
+.teams { width: 100%; border-collapse: collapse; min-width: 820px; }
+.teams th { text-align: left; font-size: 12px; font-weight: 600; color: var(--muted); padding: 0 6px 8px; white-space: nowrap; vertical-align: bottom; }
+.teams td { padding: 8px 6px; border-top: 1px solid var(--grid); vertical-align: middle; white-space: nowrap; }
+.teams th.c, .teams td.c { text-align: center; }
+.teams th.r, .teams td.r { text-align: right; }
+.teams tr.row { cursor: pointer; }
+.teams tr.row:hover td { background: var(--surface-2); }
+.teams tr.row.open td { background: var(--surface-2); }
+.tname { font-weight: 600; }
+.caret { display: inline-block; width: 12px; color: var(--muted); transition: transform .12s; }
+tr.open .caret { transform: rotate(90deg); }
+.status { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--axis); color: var(--ink-2); }
+.status.locked { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.pick { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 650; padding: 2px 6px; border-radius: 6px; min-width: 38px; justify-content: center; }
+.pick.win { color: var(--good-text); background: color-mix(in srgb, var(--good) 14%, transparent); }
+.pick.loss { color: var(--bad-text); background: color-mix(in srgb, var(--bad) 12%, transparent); }
+.pick.none { color: var(--muted); }
+.pick.locked { outline: 1.5px solid currentColor; outline-offset: -1.5px; }
+.dim { opacity: 0.28; }
+.colhi { background: color-mix(in srgb, var(--focus) 8%, transparent); }
+.div { display: flex; align-items: center; gap: 8px; }
+.div svg { flex: none; }
+.detail td { background: var(--surface-2); padding: 12px 14px 16px; white-space: normal; }
+.detail .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(200px, 300px); gap: 16px; align-items: start; }
+.detail h3 { font-size: 13px; margin: 0 0 6px; color: var(--ink-2); font-weight: 600; }
+.facts { font-size: 13px; color: var(--ink-2); margin: 0; padding: 0; list-style: none; }
+.facts li { margin: 2px 0; }
+.facts b { color: var(--ink); font-weight: 600; }
+.summary { font-size: 14px; color: var(--ink-2); margin: 10px 0 0; min-height: 20px; }
+.key { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); margin-top: 10px; }
+.key span { display: inline-flex; align-items: center; gap: 6px; }
+footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 24px; }
+.err { color: var(--bad-text); }
+.show-sm { display: none; }
+
+@media (max-width: 640px) {
+  .wrap { padding-top: 16px; }
+  h1 { font-size: 20px; }
+  .card { padding: 14px; }
+  .scroller { margin: 0 -14px; padding: 0 14px; }
+  .barcell, .hide-sm { display: none; }
+  .show-sm { display: inline; }
+  .board th, .board td { padding-left: 4px; padding-right: 4px; }
+  .big { font-size: 18px; }
+  .detail .grid { grid-template-columns: 1fr; position: sticky; left: 14px; width: calc(100vw - 60px); }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>NBA 2026-27 Over/Under</h1>
+    <div class="sub" id="updated">Loading…</div>
+  </header>
+
+  <section class="card" aria-labelledby="lb-h">
+    <div class="card-head">
+      <h2 id="lb-h">Leaderboard</h2>
+      <div class="sub" id="lb-sub"></div>
+    </div>
+    <table class="board">
+      <thead><tr>
+        <th class="rank">#</th><th>Player</th>
+        <th class="r">Projected</th><th class="r">Locked</th>
+        <th class="r hide-sm">Right–wrong</th><th class="r" id="chg-h">Since last update</th>
+        <th class="barcell"><span class="sr-only"></span></th>
+      </tr></thead>
+      <tbody id="board"></tbody>
+    </table>
+    <p class="note">Right pick +3, wrong pick −1. <b>Projected</b> scores every team by where its current pace points. <b>Locked</b> counts only teams that are mathematically settled.</p>
+  </section>
+
+  <section class="card" aria-labelledby="tr-h">
+    <div class="card-head">
+      <h2 id="tr-h">Points over the season</h2>
+      <div class="seg" role="group" aria-label="Which points to chart">
+        <button type="button" data-metric="totals" aria-pressed="true">Projected</button>
+        <button type="button" data-metric="lockedTotals" aria-pressed="false">Locked</button>
+      </div>
+    </div>
+    <div id="trend"></div>
+  </section>
+
+  <section class="card" aria-labelledby="tm-h">
+    <div class="card-head">
+      <h2 id="tm-h">Teams</h2>
+      <div class="controls">
+        <label>Player <select id="f-player"><option value="">Everyone</option></select></label>
+        <label>Show <select id="f-show">
+          <option value="all">All 30 teams</option>
+          <option value="close">Close calls (within 3 wins)</option>
+          <option value="clinched">Clinched</option>
+          <option value="right" data-needs-player>Player's right picks</option>
+          <option value="wrong" data-needs-player>Player's wrong picks</option>
+        </select></label>
+        <label>Sort <select id="f-sort">
+          <option value="team">Team A–Z</option>
+          <option value="margin">Furthest over line</option>
+          <option value="marginAsc">Furthest under line</option>
+          <option value="close">Closest to line</option>
+          <option value="split">Most split picks</option>
+        </select></label>
+      </div>
+    </div>
+    <div class="scroller">
+      <table class="teams">
+        <thead id="teams-head"></thead>
+        <tbody id="teams"></tbody>
+      </table>
+    </div>
+    <p class="summary" id="player-summary"></p>
+    <div class="key">
+      <span><span class="pick win">O ✓</span> pick currently right</span>
+      <span><span class="pick loss">U ✗</span> pick currently wrong</span>
+      <span><span class="pick win locked">O ✓</span> outlined = locked in</span>
+      <span>Pace = wins per game × 82. Click a team for its trend.</span>
+    </div>
+  </section>
+
+  <footer id="foot">Standings from ESPN, updated each morning.</footer>
+</div>
+
+<div class="tip" id="tip" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  const GAMES = 82;
+  const SERIES = ['--s1', '--s2', '--s3', '--s4', '--s5', '--s6'];
+  const $ = (id) => document.getElementById(id);
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const NS = 'http://www.w3.org/2000/svg';
+
+  function el(tag, attrs, ...kids) {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (v == null || v === false) continue;
+      if (k === 'class') n.className = v;
+      else if (k === 'style') n.style.cssText = v;
+      else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, v === true ? '' : v);
+    }
+    for (const kid of kids.flat()) if (kid != null && kid !== false) n.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
+    return n;
+  }
+  function svg(tag, attrs) {
+    const n = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs || {})) n.setAttribute(k, v);
+    return n;
+  }
+  const signed = (n, d = 0) => (n > 0 ? '+' : n < 0 ? '−' : '±') + Math.abs(n).toFixed(d);
+  const fmtDate = (iso, opts) => new Date(iso + 'T12:00:00').toLocaleDateString('en-US', opts || { month: 'short', day: 'numeric' });
+  const short = (name) => name.replace(/\s*\(.*\)\s*/, '');
+
+  let D, H, people, colorOf = {};
+  const state = { metric: 'totals', player: '', show: 'all', sort: 'team', open: new Set() };
+
+  // ---------- Leaderboard ----------
+  function renderBoard() {
+    const prev = H.length >= 2 ? H[H.length - 2] : null;
+    $('chg-h').replaceChildren(
+      el('span', { class: 'hide-sm' }, prev ? `Since ${fmtDate(prev.date)}` : 'Since last update'),
+      el('span', { class: 'show-sm' }, 'Change'));
+    const rows = people.map((p, i) => {
+      const right = D.results.filter(r => r.pointsRow[i] === 3).length;
+      const wrong = D.results.filter(r => r.pointsRow[i] === -1).length;
+      return { p, i, proj: D.totals[p], locked: D.lockedTotals[p], right, wrong,
+        chg: prev ? D.totals[p] - prev.totals[p] : null };
+    }).sort((a, b) => b.proj - a.proj || b.locked - a.locked);
+    const max = Math.max(1, ...rows.map(r => r.proj));
+    let rank = 0, last = null;
+    const tb = $('board'); tb.replaceChildren();
+    rows.forEach((r, idx) => {
+      if (r.proj !== last) { rank = idx + 1; last = r.proj; }
+      const chg = r.chg == null ? el('span', { class: 'flat' }, '—')
+        : el('span', { class: r.chg > 0 ? 'up' : r.chg < 0 ? 'down' : 'flat' }, r.chg === 0 ? '0' : signed(r.chg));
+      tb.append(el('tr', {},
+        el('td', { class: 'rank num' }, rank),
+        el('td', {}, el('span', { class: 'who' }, el('span', { class: 'dot', style: `background:${colorOf[r.p]}` }), r.p)),
+        el('td', { class: 'r num big' }, r.proj),
+        el('td', { class: 'r num' }, r.locked),
+        el('td', { class: 'r num hide-sm' }, `${r.right}–${r.wrong}`),
+        el('td', { class: 'r num' }, chg),
+        el('td', { class: 'barcell' }, el('div', { class: 'bar' },
+          el('span', { style: `width:${Math.max(0, r.proj) / max * 100}%;background:${colorOf[r.p]}` })))
+      ));
+    });
+    const clinched = D.results.filter(r => r.clinched).length;
+    $('lb-sub').textContent = D.isFinal ? 'Final — every team is settled' : `${clinched} of 30 teams clinched`;
+  }
+
+  // ---------- Trend chart ----------
+  function niceTicks(lo, hi, count) {
+    if (lo === hi) { lo -= 5; hi += 5; }
+    const raw = (hi - lo) / count, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 5, 10].map(m => m * mag).find(s => s >= raw);
+    const start = Math.floor(lo / step) * step, end = Math.ceil(hi / step) * step;
+    const t = []; for (let v = start; v <= end + 1e-9; v += step) t.push(Math.round(v * 100) / 100);
+    return t;
+  }
+
+  function renderTrend() {
+    const box = $('trend'); box.replaceChildren();
+    const metric = state.metric;
+    if (H.length < 2) {
+      box.append(el('div', { class: 'empty' },
+        `The trend line starts with the first daily update after ${fmtDate(H[0].date, { month: 'long', day: 'numeric' })}. Check back tomorrow.`));
+      box.append(legend());
+      return;
+    }
+    const W = Math.max(300, box.clientWidth || 600), Hh = W < 500 ? 220 : 280;
+    const m = { t: 12, r: 12, b: 28, l: 36 };
+    const iw = W - m.l - m.r, ih = Hh - m.t - m.b;
+    const t0 = new Date(H[0].date).getTime(), t1 = new Date(H[H.length - 1].date).getTime();
+    const x = (d) => m.l + (t1 === t0 ? iw / 2 : (new Date(d).getTime() - t0) / (t1 - t0) * iw);
+    const vals = H.flatMap(h => people.map(p => h[metric][p]));
+    const ticks = niceTicks(Math.min(0, ...vals), Math.max(...vals), 4);
+    const y0 = ticks[0], y1 = ticks[ticks.length - 1];
+    const y = (v) => m.t + ih - (v - y0) / (y1 - y0) * ih;
+
+    const s = svg('svg', { viewBox: `0 0 ${W} ${Hh}`, height: Hh, role: 'img',
+      'aria-label': `${metric === 'totals' ? 'Projected' : 'Locked'} points per player by date` });
+    for (const t of ticks) {
+      s.append(svg('line', { x1: m.l, x2: W - m.r, y1: y(t), y2: y(t), stroke: t === 0 ? css('--axis') : css('--grid'), 'stroke-width': 1 }));
+      const lab = svg('text', { x: m.l - 8, y: y(t) + 4, 'text-anchor': 'end', 'font-size': 11, fill: css('--muted') });
+      lab.textContent = t; s.append(lab);
+    }
+    const nX = Math.min(H.length, Math.max(2, Math.floor(iw / 80)));
+    const idxs = [...new Set(Array.from({ length: nX }, (_, k) => Math.round(k * (H.length - 1) / (nX - 1))))];
+    for (const k of idxs) {
+      const lab = svg('text', { x: x(H[k].date), y: Hh - 8, 'text-anchor': k === 0 ? 'start' : k === H.length - 1 ? 'end' : 'middle', 'font-size': 11, fill: css('--muted') });
+      lab.textContent = fmtDate(H[k].date); s.append(lab);
+    }
+    const hl = state.player;
+    people.forEach((p) => {
+      const d = H.map((h, k) => `${k ? 'L' : 'M'}${x(h.date).toFixed(1)},${y(h[metric][p]).toFixed(1)}`).join('');
+      s.append(svg('path', { d, fill: 'none', stroke: colorOf[p], 'stroke-width': hl && hl === p ? 3 : 2,
+        'stroke-linejoin': 'round', 'stroke-linecap': 'round', opacity: hl && hl !== p ? 0.25 : 1 }));
+    });
+    const cross = svg('line', { y1: m.t, y2: m.t + ih, stroke: css('--axis'), 'stroke-width': 1, opacity: 0 });
+    s.append(cross);
+    const dots = people.map(p => { const c = svg('circle', { r: 4, fill: colorOf[p], stroke: css('--surface'), 'stroke-width': 2, opacity: 0 }); s.append(c); return c; });
+    const hit = svg('rect', { x: m.l, y: m.t, width: iw, height: ih, fill: 'transparent', tabindex: 0 });
+    s.append(hit);
+
+    const wrap = el('div', { class: 'chart' }); wrap.append(s); box.append(wrap, legend());
+    const tip = $('tip');
+    let cur = H.length - 1;
+    const show = (k) => {
+      cur = k; const h = H[k], cx = x(h.date);
+      cross.setAttribute('x1', cx); cross.setAttribute('x2', cx); cross.setAttribute('opacity', 1);
+      people.forEach((p, i) => { dots[i].setAttribute('cx', cx); dots[i].setAttribute('cy', y(h[metric][p])); dots[i].setAttribute('opacity', 1); });
+      tip.replaceChildren(el('div', { class: 't-date' }, fmtDate(h.date, { weekday: 'short', month: 'short', day: 'numeric' })),
+        ...people.map(p => [p, h[metric][p]]).sort((a, b) => b[1] - a[1])
+          .map(([p, v]) => el('div', { class: 't-row' }, el('i', { style: `background:${colorOf[p]}` }), el('b', {}, v), el('span', {}, p))));
+      const r = wrap.getBoundingClientRect(), scale = r.width / W;
+      const left = r.left + window.scrollX + cx * scale, top = r.top + window.scrollY + m.t * scale;
+      tip.classList.add('on');
+      const tw = tip.offsetWidth;
+      tip.style.left = (left + 14 + tw > window.scrollX + document.documentElement.clientWidth - 8 ? left - 14 - tw : left + 14) + 'px';
+      tip.style.top = top + 'px';
+    };
+    const hide = () => { cross.setAttribute('opacity', 0); dots.forEach(d => d.setAttribute('opacity', 0)); tip.classList.remove('on'); };
+    const nearest = (evt) => {
+      const r = s.getBoundingClientRect(); const px = (evt.clientX - r.left) * W / r.width;
+      let best = 0; H.forEach((h, k) => { if (Math.abs(x(h.date) - px) < Math.abs(x(H[best].date) - px)) best = k; });
+      return best;
+    };
+    hit.addEventListener('pointermove', (e) => show(nearest(e)));
+    hit.addEventListener('pointerleave', hide);
+    hit.addEventListener('focus', () => show(cur));
+    hit.addEventListener('blur', hide);
+    hit.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') { show(Math.max(0, cur - 1)); e.preventDefault(); }
+      if (e.key === 'ArrowRight') { show(Math.min(H.length - 1, cur + 1)); e.preventDefault(); }
+    });
+  }
+  function legend() {
+    return el('div', { class: 'legend' }, people.map(p => el('span', {}, el('i', { style: `background:${colorOf[p]}` }), p)));
+  }
+
+  // ---------- Teams ----------
+  const margin = (r) => r.pace - r.line;
+  function splitScore(r) {
+    const o = r.picks.filter(p => p === 'OVER').length, u = r.picks.filter(p => p === 'UNDER').length;
+    return Math.min(o, u);
+  }
+
+  function divBar(r) {
+    // Pace minus line, drawn from a center zero line. ±20 wins fills the width.
+    const w = 90, h = 12, mid = w / 2, lim = 20;
+    const v = Math.max(-lim, Math.min(lim, margin(r)));
+    const len = Math.abs(v) / lim * mid;
+    const s = svg('svg', { width: w, height: h, viewBox: `0 0 ${w} ${h}`, 'aria-hidden': 'true' });
+    s.append(svg('rect', { x: 0, y: h / 2 - 1, width: w, height: 2, fill: css('--neutral') }));
+    if (len > 0.5) s.append(svg('rect', { x: v >= 0 ? mid : mid - len, y: 1, width: len, height: h - 2, rx: 3,
+      fill: v >= 0 ? css('--over') : css('--under') }));
+    s.append(svg('line', { x1: mid, x2: mid, y1: 0, y2: h, stroke: css('--ink-2'), 'stroke-width': 1 }));
+    return s;
+  }
+
+  function pickChip(r, i) {
+    const pick = r.picks[i];
+    if (!pick) return el('span', { class: 'pick none' }, '—');
+    const pts = r.pointsRow[i];
+    const cls = pts === 3 ? 'win' : pts === -1 ? 'loss' : 'none';
+    const mark = pts === 3 ? '✓' : pts === -1 ? '✗' : '';
+    const word = pick === 'OVER' ? 'Over' : 'Under';
+    const verdict = pts === 3 ? 'right' : pts === -1 ? 'wrong' : 'even';
+    return el('span', { class: `pick ${cls}${r.clinched ? ' locked' : ''}`,
+      title: `${people[i]}: ${word} — ${verdict}${r.clinched ? ', locked' : ' for now'}`,
+      'aria-label': `${people[i]} picked ${word}, ${verdict}${r.clinched ? ', locked' : ''}` }, pick[0], mark);
+  }
+
+  function teamTrend(r) {
+    const pts = H.map(h => ({ date: h.date, w: h.teams[r.teamKey] ? h.teams[r.teamKey][0] : null, l: h.teams[r.teamKey] ? h.teams[r.teamKey][1] : null }))
+      .filter(p => p.w != null && p.w + p.l > 0).map(p => ({ date: p.date, pace: p.w / (p.w + p.l) * GAMES }));
+    if (pts.length < 2) return el('div', { class: 'empty' }, 'The pace trend appears after a second daily update.');
+    const W = 520, Hh = 140, m = { t: 10, r: 64, b: 22, l: 30 }, iw = W - m.l - m.r, ih = Hh - m.t - m.b;
+    const vals = pts.map(p => p.pace).concat([r.line]);
+    const ticks = niceTicks(Math.min(...vals), Math.max(...vals), 3);
+    const y0 = ticks[0], y1 = ticks[ticks.length - 1];
+    const t0 = new Date(pts[0].date).getTime(), t1 = new Date(pts[pts.length - 1].date).getTime();
+    const x = (d) => m.l + (new Date(d).getTime() - t0) / (t1 - t0) * iw;
+    const y = (v) => m.t + ih - (v - y0) / (y1 - y0) * ih;
+    const s = svg('svg', { viewBox: `0 0 ${W} ${Hh}`, role: 'img', 'aria-label': `${r.team} pace by date against its line of ${r.line}` });
+    for (const t of ticks) {
+      s.append(svg('line', { x1: m.l, x2: m.l + iw, y1: y(t), y2: y(t), stroke: css('--grid') }));
+      const lab = svg('text', { x: m.l - 6, y: y(t) + 4, 'text-anchor': 'end', 'font-size': 11, fill: css('--muted') }); lab.textContent = t; s.append(lab);
+    }
+    s.append(svg('line', { x1: m.l, x2: m.l + iw, y1: y(r.line), y2: y(r.line), stroke: css('--ink-2'), 'stroke-dasharray': '4 3' }));
+    const ll = svg('text', { x: m.l + iw + 4, y: y(r.line) + 4, 'font-size': 11, fill: css('--ink-2') }); ll.textContent = `line ${r.line}`; s.append(ll);
+    s.append(svg('path', { d: pts.map((p, k) => `${k ? 'L' : 'M'}${x(p.date)},${y(p.pace)}`).join(''), fill: 'none', stroke: css('--s1'), 'stroke-width': 2, 'stroke-linejoin': 'round' }));
+    const lp = pts[pts.length - 1];
+    s.append(svg('circle', { cx: x(lp.date), cy: y(lp.pace), r: 4, fill: css('--s1'), stroke: css('--surface-2'), 'stroke-width': 2 }));
+    for (const [k, anchor] of [[0, 'start'], [pts.length - 1, 'end']]) {
+      const lab = svg('text', { x: x(pts[k].date), y: Hh - 6, 'text-anchor': anchor, 'font-size': 11, fill: css('--muted') }); lab.textContent = fmtDate(pts[k].date); s.append(lab);
+    }
+    return s;
+  }
+
+  function teamDetail(r) {
+    const left = GAMES - r.gp;
+    const need = Math.ceil(r.line) - r.wins; // wins needed to go over
+    const facts = el('ul', { class: 'facts' },
+      el('li', {}, 'Record ', el('b', {}, `${r.wins}–${r.losses}`), ` with ${left} games left`),
+      el('li', {}, 'Line ', el('b', {}, r.line), ', current pace ', el('b', {}, r.pace.toFixed(1))),
+      r.clinched
+        ? el('li', {}, el('b', {}, `Clinched ${r.trendStatus === 'OVER' ? 'Over' : 'Under'}`))
+        : el('li', {}, 'Needs ', el('b', {}, `${need}–${left - need}`), ` or better the rest of the way to go Over (${(need / Math.max(1, left) * 100).toFixed(0)}% of remaining games)`),
+      el('li', {}, 'Over: ', el('b', {}, people.filter((p, i) => r.picks[i] === 'OVER').map(short).join(', ') || 'nobody')),
+      el('li', {}, 'Under: ', el('b', {}, people.filter((p, i) => r.picks[i] === 'UNDER').map(short).join(', ') || 'nobody'))
+    );
+    return el('div', { class: 'grid' },
+      el('div', {}, el('h3', {}, 'Pace vs. line'), teamTrend(r)),
+      el('div', {}, el('h3', {}, 'Details'), facts));
+  }
+
+  function renderTeams() {
+    const pi = state.player === '' ? -1 : people.indexOf(state.player);
+    const head = $('teams-head');
+    head.replaceChildren(el('tr', {},
+      el('th', {}, 'Team'), el('th', { class: 'r' }, 'Line'), el('th', { class: 'r' }, 'Record'),
+      el('th', { class: 'r' }, 'Pace'), el('th', {}, 'Pace vs line'), el('th', {}, 'Status'),
+      people.map((p, i) => el('th', { class: `c${pi === i ? ' colhi' : ''}${pi >= 0 && pi !== i ? ' dim' : ''}` }, short(p)))
+    ));
+
+    let rows = D.results.slice();
+    if (state.show === 'close') rows = rows.filter(r => !r.clinched && Math.abs(margin(r)) <= 3);
+    if (state.show === 'clinched') rows = rows.filter(r => r.clinched);
+    if (pi >= 0 && state.show === 'right') rows = rows.filter(r => r.pointsRow[pi] === 3);
+    if (pi >= 0 && state.show === 'wrong') rows = rows.filter(r => r.pointsRow[pi] === -1);
+    const by = {
+      team: (a, b) => a.team.localeCompare(b.team),
+      margin: (a, b) => margin(b) - margin(a),
+      marginAsc: (a, b) => margin(a) - margin(b),
+      close: (a, b) => Math.abs(margin(a)) - Math.abs(margin(b)),
+      split: (a, b) => splitScore(b) - splitScore(a) || Math.abs(margin(a)) - Math.abs(margin(b)),
+    };
+    rows.sort(by[state.sort]);
+
+    const tb = $('teams'); tb.replaceChildren();
+    if (!rows.length) {
+      tb.append(el('tr', {}, el('td', { colspan: 6 + people.length, style: 'text-align:center;color:var(--muted);padding:20px' }, 'No teams match.')));
+    }
+    const cols = 6 + people.length;
+    for (const r of rows) {
+      const open = state.open.has(r.teamKey);
+      const dir = r.trendStatus === 'OVER' ? 'Over' : r.trendStatus === 'UNDER' ? 'Under' : 'Even';
+      const toggle = () => { open ? state.open.delete(r.teamKey) : state.open.add(r.teamKey); renderTeams(); };
+      const tr = el('tr', { class: `row${open ? ' open' : ''}`, tabindex: 0, 'aria-expanded': String(open),
+        onclick: toggle, onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } } },
+        el('td', {}, el('span', { class: 'caret', 'aria-hidden': 'true' }, '›'), ' ', el('span', { class: 'tname' }, r.team)),
+        el('td', { class: 'r num' }, r.line),
+        el('td', { class: 'r num' }, `${r.wins}–${r.losses}`),
+        el('td', { class: 'r num' }, r.pace.toFixed(1)),
+        el('td', {}, el('span', { class: 'div' }, divBar(r), el('span', { class: 'num', style: 'min-width:42px' }, signed(margin(r), 1)))),
+        el('td', {}, el('span', { class: `status${r.clinched ? ' locked' : ''}` }, r.clinched ? `${dir} · locked` : `${dir} · trending`)),
+        people.map((p, i) => el('td', { class: `c${pi === i ? ' colhi' : ''}${pi >= 0 && pi !== i ? ' dim' : ''}` }, pickChip(r, i)))
+      );
+      tb.append(tr);
+      if (open) tb.append(el('tr', { class: 'detail' }, el('td', { colspan: cols }, teamDetail(r))));
+    }
+
+    const sum = $('player-summary');
+    if (pi >= 0) {
+      const right = D.results.filter(r => r.pointsRow[pi] === 3), wrong = D.results.filter(r => r.pointsRow[pi] === -1);
+      const lockedR = right.filter(r => r.clinched).length, lockedW = wrong.filter(r => r.clinched).length;
+      sum.textContent = `${state.player}: ${right.length} right, ${wrong.length} wrong right now` +
+        (lockedR + lockedW ? ` (${lockedR} right and ${lockedW} wrong are locked in).` : '. None locked in yet.');
+    } else sum.textContent = '';
+  }
+
+  // ---------- Controls ----------
+  function wire() {
+    const fp = $('f-player');
+    for (const p of people) fp.append(el('option', { value: p }, p));
+    const syncShow = () => {
+      for (const o of $('f-show').options) if (o.hasAttribute('data-needs-player')) o.disabled = !state.player;
+      if (!state.player && (state.show === 'right' || state.show === 'wrong')) { state.show = 'all'; $('f-show').value = 'all'; }
+    };
+    fp.addEventListener('change', () => { state.player = fp.value; syncShow(); renderTeams(); renderTrend(); });
+    $('f-show').addEventListener('change', (e) => { state.show = e.target.value; renderTeams(); });
+    $('f-sort').addEventListener('change', (e) => { state.sort = e.target.value; renderTeams(); });
+    document.querySelectorAll('[data-metric]').forEach(b => b.addEventListener('click', () => {
+      state.metric = b.dataset.metric;
+      document.querySelectorAll('[data-metric]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      renderTrend();
+    }));
+    syncShow();
+    let t; window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(renderTrend, 120); });
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', renderAll);
+  }
+
+  function renderAll() {
+    people.forEach((p, i) => colorOf[p] = css(SERIES[i % SERIES.length]));
+    renderBoard(); renderTrend(); renderTeams();
+  }
+
+  Promise.all(['data/latest.json', 'data/history.json'].map(u => fetch(u, { cache: 'no-store' }).then(r => {
+    if (!r.ok) throw new Error(`${u}: ${r.status}`); return r.json();
+  }))).then(([latest, history]) => {
+    D = latest; H = history.length ? history : [{ date: latest.date, totals: latest.totals, lockedTotals: latest.lockedTotals, teams: {} }];
+    people = D.people;
+    const when = new Date(D.timestamp);
+    $('updated').textContent = `Updated ${when.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}, ${when.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+    wire(); renderAll();
+  }).catch(err => {
+    $('updated').replaceChildren(el('span', { class: 'err' }, "Couldn't load the latest data. Try refreshing."));
+    console.error(err);
+  });
+})();
+</script>
+</body>
+</html>
